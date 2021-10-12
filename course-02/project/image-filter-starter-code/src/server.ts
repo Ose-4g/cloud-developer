@@ -34,7 +34,7 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   // Root Endpoint
   // Displays a simple message to the user
   app.get( "/", ( req, res ) => {
-    res.send("try GET /filteredimage?image_url={{}}")
+    res.send("Welcome to Ose4g image filter. Use /filteredimage to filter your image")
   } );
   
   // api endpoint to get filtered image
