@@ -31,40 +31,40 @@ provider:
     AUTH_0_SECRET_FIELD: auth0Secret
 
   iamRoleStatements:
-      - Effect: Allow
-          Action:
-            - dynammodb:Scan
-            - dynamodb:PutItem
-            - dynammodb:Query
-            - dynammodb:GetItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      
-      - Effect: Allow
-          Action:
-            - dynammodb:Scan
-            - dynammodb:Query
-            - dynammodb:GetItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
-      
-      - Effect: Allow
-          Action:
-            - s3:GetObject
-            - s3:PutObject
-          Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
-      - Effect: Allow
-          Action:
-            - secretsmanager:GetSecretValue
-          Resource: !Ref Auth0Secret
-      - Effect: Allow
-          Action:
-            - kms:Decrypt
-          Resource: !GetAtt KMSKey.Arn
-      - Effect: Allow
-          Action:
-            - xray:PutTraceSegments
-            - xray:PutTelemetryRecords
-          Resource:
-            - "*"
+    - Effect: Allow
+        Action:
+          - dynammodb:Scan
+          - dynamodb:PutItem
+          - dynammodb:Query
+          - dynammodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+    
+    - Effect: Allow
+        Action:
+          - dynammodb:Scan
+          - dynammodb:Query
+          - dynammodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+    
+    - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:PutObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+    - Effect: Allow
+        Action:
+          - secretsmanager:GetSecretValue
+        Resource: !Ref Auth0Secret
+    - Effect: Allow
+        Action:
+          - kms:Decrypt
+        Resource: !GetAtt KMSKey.Arn
+    - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
   logs:
     # Enable API Gateway logs
     restApi: true
@@ -112,6 +112,20 @@ functions:
           method: get
           path: todos
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+          Action:
+            - dynammodb:Scan
+            - dynammodb:Query
+            - dynammodb:GetItem
+          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      
+      - Effect: Allow
+          Action:
+            - dynammodb:Scan
+            - dynammodb:Query
+            - dynammodb:GetItem
+          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
     
     
   # TODO: Configure this function - 
@@ -135,8 +149,13 @@ functions:
           request:
             schemas:
               application/json: ${file(models/create-todo-model.json)}
-
-
+    iamRoleStatements:
+      - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+    
+   
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements, and request schemas
   UpdateTodo:
@@ -155,7 +174,13 @@ functions:
           request:
             schemas:
               application/json: ${file(models/update-todo-model.json)}
-          
+    iamRoleStatements:
+      - Effect: Allow
+          Action:
+            - dynammodb:UpdateItem
+            - dynamodb:PutItem
+          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+       
 
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
@@ -167,6 +192,11 @@ functions:
           path: todos/{todoId}
           cors: true
           authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+          Action:
+            - dynammodb:DeleteItem
+          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
@@ -178,6 +208,16 @@ functions:
           path: todos/{todoId}/attachment
           cors: true
           authorizer: Auth
+    iamRoleStatements:
+      - Effect: Allow
+          Action:
+            - dynammodb:UpdateItem
+            - dynamodb:PutItem
+          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
 
 resources:
   Resources:
