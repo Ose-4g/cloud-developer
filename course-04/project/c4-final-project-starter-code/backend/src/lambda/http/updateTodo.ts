@@ -20,12 +20,10 @@ export const handler = middy(
 
     try {
       const userId = getUserId(event)
-      await updateTodos(userId, name,dueDate, done);
+      const updated = await updateTodos(userId, name,dueDate, done);
       return {
         statusCode: 200,
-        body: JSON.stringify({
-          message: 'todo update successful'
-        })
+        body: ''
       }
     } catch (error) {
       return {

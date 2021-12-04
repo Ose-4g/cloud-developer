@@ -21,6 +21,12 @@ const updateTodos = async(todoId:string, name: string, dueDate: string, done: bo
         },
         ReturnValues:"UPDATED_NEW"
       }).promise()
+    
+      return {
+          name,
+          dueDate,
+          done
+      }
   
 }
 
