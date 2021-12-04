@@ -6,9 +6,17 @@ import { createLogger } from '../../utils/logger'
 import Axios from 'axios'
 import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
+import * as AWS from 'aws-sdk'
+import { secretsManager } from 'middy/middlewares'
 
 const logger = createLogger('auth')
-const auth0Secret = process.env.AUTH_0_SECRET
+const secretId = process.env.AUTH_0_SECRET_ID
+const secretField = process.env.AUTH_0_SECRET_FIELD
+
+const client = new AWS.SecretsManager()
+
+
+let cachedSecret: string
 
 // TODO: Provide a URL that can be used to download a certificate that can be used
 // to verify JWT token signature.
@@ -63,7 +71,10 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
   // You should implement it similarly to how it was implemented for the exercise for the lesson 5
   // You can read more about how to do this here: https://auth0.com/blog/navigating-rs256-and-jwks/
   
-  return verify(token, auth0Secret) as JwtPayload
+  const secretObject = await getSecret();
+  const secret = secretObject[secretField]
+
+  return verify(token, secret) as JwtPayload
 }
 
 function getToken(authHeader: string): string {
@@ -76,4 +87,19 @@ function getToken(authHeader: string): string {
   const token = split[1]
 
   return token
+}
+
+async function getSecret()
+{
+  if(cachedSecret) return cachedSecret
+
+  const data = await client
+  .getSecretValue({
+    SecretId: secretId
+  })
+  .promise()
+
+  cachedSecret = data.SecretString
+
+  return JSON.parse(cachedSecret)
 }
