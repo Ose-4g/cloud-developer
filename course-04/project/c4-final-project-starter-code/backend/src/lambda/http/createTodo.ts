@@ -23,7 +23,7 @@ export const handler = middy(
       }
     } catch (error) {
       return {
-        statusCode: 201,
+        statusCode: 500,
         body: JSON.stringify({
           error: 'creation of todo unsuccessful'
         })

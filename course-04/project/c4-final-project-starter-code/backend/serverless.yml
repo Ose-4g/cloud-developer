@@ -25,6 +25,7 @@ provider:
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
+    USER_ID_INDEX: UserIdIndex
     ATTACHMENT_S3_BUCKET: serverless-ose4g-todo-images-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
     AUTH_0_SECRET_ID: Auth0Secret-TodoApp-test20-${self:provider.stage}
@@ -271,6 +272,15 @@ resources:
           KeyType: RANGE
       Projection:
         ProjectionType: ALL # What attributes will be copied to an index
+   GlobalSecondaryIndexes:
+    - IndexName: ${self:provider.environment.USER_ID_INDEX}
+      KeySchema:
+      - AttributeName: userId
+        KeyType: HASH
+      - AttributeName: todoId
+        KeyType: RANGE
+      Projection:
+        ProjectionType: ALL
 
 
     # TODO: Complete the bucket properties below. 
