@@ -10,7 +10,7 @@ import { getUserId } from '../utils'
 import { createLogger } from '../../utils/logger'
 
 
-const logger = createLogger('auth')
+const logger = createLogger('upload-url')
 
 
 export const handler = middy(

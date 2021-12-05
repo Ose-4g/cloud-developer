@@ -9,7 +9,7 @@ import getTodos from '../../functions/getTodos'
 import { createLogger } from '../../utils/logger'
 
 
-const logger = createLogger('auth')
+const logger = createLogger('get-todos')
 
 // TODO: Get all TODO items for a current user
 export const handler = middy(

@@ -10,7 +10,7 @@ import updateTodos from '../../functions/updateTodos'
 import { createLogger } from '../../utils/logger'
 
 
-const logger = createLogger('auth')
+const logger = createLogger('update-todo')
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {

@@ -8,7 +8,7 @@ import createTodo from '../../functions/createTodo'
 import { createLogger } from '../../utils/logger'
 
 
-const logger = createLogger('auth')
+const logger = createLogger('create-todo')
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {

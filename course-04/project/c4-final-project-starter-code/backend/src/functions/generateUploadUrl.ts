@@ -9,7 +9,7 @@ const XAWS = AWSXRay.captureAWS(AWS);
 const docClient = new XAWS.DynamoDB.DocumentClient()
 const todoTable = process.env.TODOS_TABLE
 const s3Client = new S3Client({ region: 'us-east-1'})
-const logger = createLogger('auth');
+const logger = createLogger('s3upload');
 const todoBucket = process.env.ATTACHMENT_S3_BUCKET
 const urlExpires = process.env.SIGNED_URL_EXPIRATION
 
