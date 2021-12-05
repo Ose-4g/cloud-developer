@@ -1,8 +1,12 @@
-import * as uuid from 'uuid'
-import {DynamoDB} from 'aws-sdk'
+import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 import { TodoItem } from '../models/TodoItem'
 
-const docClient = new DynamoDB.DocumentClient()
+const XAWS = AWSXRay.captureAWS(AWS);
+
+const docClient = new XAWS.DynamoDB.DocumentClient()
+
+
 const todoTable = process.env.TODOS_TABLE
 const userIdIndex = process.env.USER_ID_INDEX
 

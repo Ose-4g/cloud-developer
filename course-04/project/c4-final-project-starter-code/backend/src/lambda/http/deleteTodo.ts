@@ -6,6 +6,10 @@ import { cors, httpErrorHandler } from 'middy/middlewares'
 
 import  deleteTodo from '../../functions/deleteTodo'
 import { getUserId } from '../utils'
+import { createLogger } from '../../utils/logger'
+
+
+const logger = createLogger('auth')
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -24,6 +28,7 @@ export const handler = middy(
         })
       }
     } catch (error) {
+      logger.error(error)
       return {
         statusCode: 500,
         body: JSON.stringify({

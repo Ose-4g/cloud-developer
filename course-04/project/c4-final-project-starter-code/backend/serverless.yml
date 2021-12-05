@@ -1,12 +1,10 @@
 # TODO: Change the name of the org 
-org: sudkul
-app: serverless-todo-app
+
 service: serverless-todo-app
 
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
-  - serverless-plugin-tracing
 
 provider:
   name: aws
@@ -33,51 +31,50 @@ provider:
 
   iamRoleStatements:
     - Effect: Allow
-        Action:
-          - dynammodb:Scan
-          - dynamodb:PutItem
-          - dynammodb:Query
-          - dynammodb:GetItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource:
+        - "*"
+    - Effect: Allow
+      Action: 
+        - dynamodb:Scan
+        - dynamodb:PutItem
+        - dynamodb:Query
+        - dynamodb:GetItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
     
     - Effect: Allow
-        Action:
-          - dynammodb:Scan
-          - dynammodb:Query
-          - dynammodb:GetItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:GetItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:GetItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
     
     - Effect: Allow
-        Action:
-          - s3:GetObject
-          - s3:PutObject
-        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
     - Effect: Allow
-        Action:
-          - secretsmanager:GetSecretValue
-        Resource: !Ref Auth0Secret
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: !Ref Auth0Secret
     - Effect: Allow
-        Action:
-          - kms:Decrypt
-        Resource: !GetAtt KMSKey.Arn
-    - Effect: Allow
-        Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource:
-          - "*"
+      Action:
+        - kms:Decrypt
+      Resource: !GetAtt KMSKey.Arn
+
   logs:
     # Enable API Gateway logs
     restApi: true
-
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - xray:PutTelemetryRecords
-            - xray:PutTraceSegments
-          Resource: '*'
 
 
 custom: 
@@ -113,20 +110,26 @@ functions:
           method: get
           path: todos
           cors: true
+          authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynammodb:Scan
-            - dynammodb:Query
-            - dynammodb:GetItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       
       - Effect: Allow
-          Action:
-            - dynammodb:Scan
-            - dynammodb:Query
-            - dynammodb:GetItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
     
     
   # TODO: Configure this function - 
@@ -146,16 +149,22 @@ functions:
             summary: Create a new todo item
             description: Create a new todo item
             requestModels:
-              'application/json':CreateTodoItem
+              'application/json': CreateTodoItem
           request:
             schemas:
               application/json: ${file(models/create-todo-model.json)}
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-    
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+  
    
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements, and request schemas
@@ -171,16 +180,22 @@ functions:
             summary: Update a todo item
             description: Update a todo item
             requestModels:
-              'application/json':UpdateTodoItem
+              'application/json': UpdateTodoItem
           request:
             schemas:
               application/json: ${file(models/update-todo-model.json)}
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynammodb:UpdateItem
-            - dynamodb:PutItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:UpdateItem
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
        
 
   # TODO: Configure this function
@@ -195,9 +210,19 @@ functions:
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynammodb:DeleteItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
 
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
@@ -211,14 +236,21 @@ functions:
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynammodb:UpdateItem
-            - dynamodb:PutItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:UpdateItem
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
           - s3:PutObject
+          - s3:GetObject
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
 
 resources:
   Resources:
@@ -232,6 +264,10 @@ resources:
           gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
           gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
           gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
+
     
     RequestBodyValidator: 
       Type: AWS::ApiGateway::RequestValidator
@@ -241,50 +277,49 @@ resources:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
         ValidateRequestParameters: false
-    GatewayResponseDefault4XX:
-      Type: AWS::ApiGateway::GatewayResponse
-      Properties:
+
     
     # TODO: Create a DynamoDB table with local secondary index and a composite key
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-    - AttributeName: userId
-      AttributeType: S
-    - AttributeName: todoId
-      AttributeType: S
-    - AttributeName: createdAt
-      AttributeType: S
-  KeySchema:
-    - AttributeName: userId
-      KeyType: HASH
-    - AttributeName: todoId
-      KeyType: RANGE
-  BillingMode: PAY_PER_REQUEST
-  TableName: ${self:provider.environment.TODOS_TABLE}
-  LocalSecondaryIndexes:
-    - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
-      KeySchema:
-        - AttributeName: userId
-          KeyType: HASH
-        - AttributeName: createdAt
-          KeyType: RANGE
-      Projection:
-        ProjectionType: ALL # What attributes will be copied to an index
-   GlobalSecondaryIndexes:
-    - IndexName: ${self:provider.environment.USER_ID_INDEX}
-      KeySchema:
-      - AttributeName: userId
-        KeyType: HASH
-      - AttributeName: todoId
-        KeyType: RANGE
-      Projection:
-        ProjectionType: ALL
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: todoId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: todoId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODOS_TABLE}
+        LocalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL # What attributes will be copied to an index
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.USER_ID_INDEX}
+            KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: todoId
+              KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
 
 
     # TODO: Complete the bucket properties below. 
     # Do not forget to add the CorsConfiguration propoerty
+
     AttachmentsBucket:
       Type: AWS::S3::Bucket
       Properties:
@@ -302,7 +337,7 @@ resources:
               - POST
               - DELETE
               - HEAD
-            Maxage: 3000
+            MaxAge: 3000
 
 
     # TODO: Complete the policy below and attach it to the bucket defined above
@@ -312,21 +347,21 @@ resources:
       Properties:
         PolicyDocument:
           Id: MyPolicy
-          Version: "2017-10-17"
+          Version: "2012-10-17"
           Statement:
             - Sid: PublicReadForGetBucketObjects
               Effect: Allow
               Principal: '*'
-              Action: s3:GetObject
-              Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
         Bucket: !Ref AttachmentsBucket
         
-     KMSKey:
+    KMSKey:
       Type: AWS::KMS::Key
       Properties:
         Description: KMS key to encrypt Auth0 secret
         KeyPolicy:
-          Version: '2012-10-17'
+          Version: "2012-10-17"
           Id: key-default-1
           Statement:
             - Sid: Allow administration of the key

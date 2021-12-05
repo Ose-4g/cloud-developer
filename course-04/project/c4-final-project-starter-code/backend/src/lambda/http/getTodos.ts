@@ -6,6 +6,10 @@ import { cors } from 'middy/middlewares'
 
 import { getUserId } from '../utils';
 import getTodos from '../../functions/getTodos'
+import { createLogger } from '../../utils/logger'
+
+
+const logger = createLogger('auth')
 
 // TODO: Get all TODO items for a current user
 export const handler = middy(
@@ -17,10 +21,11 @@ export const handler = middy(
       return {
         statusCode: 200,
         body: JSON.stringify({
-          todos
+          items:todos
         })
       }
     } catch (error) {
+      logger.error(error)
       return {
         statusCode: 500,
         body: JSON.stringify({

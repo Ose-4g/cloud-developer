@@ -1,25 +1,29 @@
-import * as uuid from 'uuid'
-import {DynamoDB} from 'aws-sdk'
-import { TodoItem } from '../models/TodoItem'
+import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 
-const docClient = new DynamoDB.DocumentClient()
+const XAWS = AWSXRay.captureAWS(AWS);
+
+const docClient = new XAWS.DynamoDB.DocumentClient()
 const todoTable = process.env.TODOS_TABLE
 
-const updateTodos = async(todoId:string, name: string, dueDate: string, done: boolean)=> {
+const updateTodos = async(todoId:string, userId:string, name: string, dueDate: string, done: boolean)=> {
    
     await docClient.update({ // IAM permission - dynamodb:UpdateItem
         TableName: todoTable,
         Key:{
-          todoId: todoId
+          todoId: todoId,
+          userId:userId
         },
-        UpdateExpression: "set todoName = :todoName, dueDate = :dueDate, done = :done",
-        ConditionExpression: "userId = :userId",
+        UpdateExpression: "SET #n = :name, dueDate = :dueDate, done = :done",
         ExpressionAttributeValues: { 
-          ":todoName": name,
+          ":name": name,
           ":dueDate": dueDate,
           ":done": done,
         },
-        ReturnValues:"UPDATED_NEW"
+        ExpressionAttributeNames: {
+          "#n": "name",
+        },
+        ReturnValues:"ALL_NEW"
       }).promise()
     
       return {

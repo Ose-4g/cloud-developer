@@ -1,9 +1,9 @@
-import { CreateTodoRequest } from "../requests/CreateTodoRequest"
-import * as uuid from 'uuid'
-import {DynamoDB} from 'aws-sdk'
-import { getUserId } from "../lambda/utils"
+import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 
-const docClient = new DynamoDB.DocumentClient()
+const XAWS = AWSXRay.captureAWS(AWS);
+
+const docClient = new XAWS.DynamoDB.DocumentClient()
 const todoTable = process.env.TODOS_TABLE
 
 const deleteTodo = async (todoId: string, userId)=>{
@@ -11,12 +11,9 @@ const deleteTodo = async (todoId: string, userId)=>{
     await docClient.delete({ // IAM permission - dynamodb:DeleteItem
         TableName:todoTable,
         Key:{
-          todoId: todoId
+          todoId: todoId,
+          userId: userId
         },
-        ConditionExpression: "userId = :userId",
-        ExpressionAttributeValues:{
-          ":userId" : userId
-        }
       }).promise()
 }
 
