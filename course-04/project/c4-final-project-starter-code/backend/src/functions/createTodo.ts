@@ -1,12 +1,6 @@
 import { CreateTodoRequest } from "../requests/CreateTodoRequest"
 import * as uuid from 'uuid'
-import * as AWS from 'aws-sdk'
-import * as AWSXRay from 'aws-xray-sdk'
-
-const XAWS = AWSXRay.captureAWS(AWS);
-
-const docClient = new XAWS.DynamoDB.DocumentClient()
-const todoTable = process.env.TODOS_TABLE
+import todoAccess from '../helpers/todosAccess'
 
 const createTodo = async (todo: CreateTodoRequest, userId: string)=>{
 
@@ -18,11 +12,7 @@ const createTodo = async (todo: CreateTodoRequest, userId: string)=>{
         ...todo
     }
 
-    await docClient.put({
-        TableName: todoTable,
-        Item: newTodo
-    }).promise()
-
+    await todoAccess.createTodoItem(newTodo)
     return newTodo
 }
 

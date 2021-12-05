@@ -1,20 +1,8 @@
-import * as AWS from 'aws-sdk'
-import * as AWSXRay from 'aws-xray-sdk'
+import todosAccess from "../helpers/todosAccess"
 
-const XAWS = AWSXRay.captureAWS(AWS);
-
-const docClient = new XAWS.DynamoDB.DocumentClient()
-const todoTable = process.env.TODOS_TABLE
 
 const deleteTodo = async (todoId: string, userId)=>{
-
-    await docClient.delete({ // IAM permission - dynamodb:DeleteItem
-        TableName:todoTable,
-        Key:{
-          todoId: todoId,
-          userId: userId
-        },
-      }).promise()
+  await todosAccess.deleteTodoItem(todoId, userId)
 }
 
 export default deleteTodo
